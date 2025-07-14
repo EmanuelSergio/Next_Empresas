@@ -1,5 +1,5 @@
-import { useState } from "react";
-
+"use client";
+import { useEffect, useState } from "react";
 // Componente do Modal de Edição
 export function EditEmpresaModal({
   isOpen,
@@ -50,8 +50,8 @@ export function EditEmpresaModal({
                   <input
                     type="text"
                     className="form-control"
-                    name="razaoSocial"
-                    value={formData.razaoSocial}
+                    name="razao_social"
+                    value={formData.razao_social}
                     onChange={handleChange}
                     required
                   />
