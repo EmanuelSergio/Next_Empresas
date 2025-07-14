@@ -1,15 +1,10 @@
-import Link from "next/link";
+"use client";
 
-interface Empresa {
-  id: number;
-  razaoSocial: string;
-  cnpj: string;
-  cep: string;
-  cidade: string;
-  estado: string;
-  bairro: string;
-  complemento: string;
-}
+import { useState } from "react";
+import Link from "next/link";
+import { EditEmpresaModal } from "../components/EditEmpresaModal";
+import { DeleteConfirmationModal } from "../components/DeleteLicencaModal";
+import { SelectLicencaModal } from "../components/AddLicencaModal";
 
 interface Licenca {
   id: number;
@@ -20,8 +15,7 @@ interface Licenca {
 }
 
 export default function EmpresaDetalhesPage() {
-  // Dados de exemplo - substitua pelos dados reais do seu banco de dados
-  const empresa: Empresa = {
+  const [empresa, setEmpresa] = useState<Empresa>({
     id: 1,
     razaoSocial: "Empresa Exemplo Ltda",
     cnpj: "00.000.000/0001-00",
@@ -30,9 +24,9 @@ export default function EmpresaDetalhesPage() {
     estado: "SP",
     bairro: "Centro",
     complemento: "Sala 1001",
-  };
+  });
 
-  const licencas: Licenca[] = [
+  const [licencas, setLicencas] = useState<Licenca[]>([
     {
       id: 1,
       numero: "LIC-2023-001",
@@ -47,10 +41,70 @@ export default function EmpresaDetalhesPage() {
       emissao: "15/03/2023",
       validade: "15/03/2025",
     },
+  ]);
+
+  // Modal de seleção de licença
+  const [showSelectModal, setShowSelectModal] = useState(false);
+
+  // Simulação de licenças disponíveis para vincular
+  const licencasDisponiveis: Licenca[] = [
+    {
+      id: 3,
+      numero: "LIC-2023-003",
+      orgaoAmbiental: "SMA",
+      emissao: "01/05/2023",
+      validade: "01/05/2026",
+    },
+    {
+      id: 4,
+      numero: "LIC-2023-004",
+      orgaoAmbiental: "FEPAM",
+      emissao: "20/06/2023",
+      validade: "20/06/2025",
+    },
   ];
+
+  const handleVincularLicenca = (licenca: Licenca) => {
+    setLicencas((prev) => [...prev, licenca]);
+  };
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const handleSaveEmpresa = (updatedData: Empresa) => {
+    setEmpresa(updatedData);
+    console.log("Empresa atualizada:", updatedData);
+  };
+
+  const handleDeleteEmpresa = () => {
+    console.log("Empresa excluída:", empresa.id);
+    window.location.href = "/empresas";
+  };
 
   return (
     <main className="container mt-4">
+      <EditEmpresaModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        empresa={empresa}
+        onSave={handleSaveEmpresa}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteEmpresa}
+      />
+
+      <SelectLicencaModal
+        isOpen={showSelectModal}
+        onClose={() => setShowSelectModal(false)}
+        licencasDisponiveis={licencasDisponiveis}
+        licencasVinculadas={licencas}
+        onVincular={handleVincularLicenca}
+      />
+
+      {/* Conteúdo principal */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="text-dark">Detalhes da Empresa</h1>
         <Link href="/empresas" className="btn btn-outline-secondary">
@@ -88,19 +142,25 @@ export default function EmpresaDetalhesPage() {
                 </div>
               </div>
 
-              <div className="d-flex justify-content-end mb-3">
-                <Link
-                  href={`/empresas/${empresa.id}/editar`}
-                  className="btn btn-primary me-2"
+              <div className="d-flex justify-content-end mb-3 gap-2">
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="btn btn-primary"
                 >
                   Editar Empresa
-                </Link>
-                <Link
-                  href={`/empresas/${empresa.id}/licencas/nova`}
+                </button>
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="btn btn-danger"
+                >
+                  Excluir Empresa
+                </button>
+                <button
+                  onClick={() => setShowSelectModal(true)}
                   className="btn btn-success"
                 >
-                  Adicionar Licença
-                </Link>
+                  Vincular Licença Existente
+                </button>
               </div>
 
               <h5 className="mt-4 mb-3">Licenças Ambientais</h5>
