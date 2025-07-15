@@ -1,28 +1,84 @@
-import { useState } from "react";
+"use client";
 
-// Componente do Modal de Edição
+import { useState } from "react";
+import { empresaService } from "@/app/services/empresaService";
+
+interface EditEmpresaModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  empresa: Empresa;
+  onSave: () => Promise<void> | void;
+}
+
 export function EditEmpresaModal({
   isOpen,
   onClose,
   empresa,
   onSave,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  empresa: Empresa;
-  onSave: (data: Empresa) => void;
-}) {
+}: EditEmpresaModalProps) {
   const [formData, setFormData] = useState<Empresa>(empresa);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateForm = () => {
+    if (!formData.razao_social.trim()) {
+      setError("Razão social é obrigatória");
+      return false;
+    }
+
+    if (!formData.cnpj.trim()) {
+      setError("CNPJ é obrigatório");
+      return false;
+    }
+
+    if (!formData.cep.trim()) {
+      setError("CEP é obrigatório");
+      return false;
+    }
+
+    if (!formData.cidade.trim()) {
+      setError("Cidade é obrigatória");
+      return false;
+    }
+
+    if (!formData.estado.trim()) {
+      setError("Estado é obrigatório");
+      return false;
+    }
+
+    if (!formData.bairro.trim()) {
+      setError("Bairro é obrigatório");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
-    onClose();
+    setError(null);
+
+    if (!validateForm()) return;
+
+    setLoading(true);
+
+    try {
+      await empresaService.update(empresa.id, formData);
+      await onSave(); // Atualiza a lista de empresas
+      onClose(); // Fecha o modal
+    } catch (err) {
+      console.error("Erro ao atualizar empresa:", err);
+      setError(
+        err instanceof Error ? err.message : "Erro ao atualizar empresa"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -40,24 +96,34 @@ export function EditEmpresaModal({
               type="button"
               className="btn-close"
               onClick={onClose}
+              disabled={loading}
             ></button>
           </div>
           <div className="modal-body">
+            {error && (
+              <div className="alert alert-danger mb-3">
+                <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                {error}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit}>
               <div className="row g-3">
-                <div className="col-md-6">
-                  <label className="form-label">Razão Social</label>
+                <div className="col-md-12">
+                  <label className="form-label">Razão Social*</label>
                   <input
                     type="text"
                     className="form-control"
-                    name="razaoSocial"
-                    value={formData.razaoSocial}
+                    name="razao_social"
+                    value={formData.razao_social}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
+
                 <div className="col-md-6">
-                  <label className="form-label">CNPJ</label>
+                  <label className="form-label">CNPJ*</label>
                   <input
                     type="text"
                     className="form-control"
@@ -65,10 +131,12 @@ export function EditEmpresaModal({
                     value={formData.cnpj}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
-                <div className="col-md-3">
-                  <label className="form-label">CEP</label>
+
+                <div className="col-md-6">
+                  <label className="form-label">CEP*</label>
                   <input
                     type="text"
                     className="form-control"
@@ -76,10 +144,12 @@ export function EditEmpresaModal({
                     value={formData.cep}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
-                <div className="col-md-5">
-                  <label className="form-label">Cidade</label>
+
+                <div className="col-md-6">
+                  <label className="form-label">Cidade*</label>
                   <input
                     type="text"
                     className="form-control"
@@ -87,10 +157,12 @@ export function EditEmpresaModal({
                     value={formData.cidade}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
-                <div className="col-md-4">
-                  <label className="form-label">Estado</label>
+
+                <div className="col-md-6">
+                  <label className="form-label">Estado*</label>
                   <input
                     type="text"
                     className="form-control"
@@ -98,10 +170,12 @@ export function EditEmpresaModal({
                     value={formData.estado}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
+
                 <div className="col-md-6">
-                  <label className="form-label">Bairro</label>
+                  <label className="form-label">Bairro*</label>
                   <input
                     type="text"
                     className="form-control"
@@ -109,8 +183,10 @@ export function EditEmpresaModal({
                     value={formData.bairro}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
+
                 <div className="col-md-6">
                   <label className="form-label">Complemento</label>
                   <input
@@ -119,19 +195,37 @@ export function EditEmpresaModal({
                     name="complemento"
                     value={formData.complemento}
                     onChange={handleChange}
+                    disabled={loading}
                   />
                 </div>
               </div>
+
               <div className="modal-footer mt-4">
                 <button
                   type="button"
                   className="btn btn-secondary"
                   onClick={onClose}
+                  disabled={loading}
                 >
                   Cancelar
                 </button>
-                <button type="submit" className="btn btn-primary">
-                  Salvar Alterações
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                      Salvando...
+                    </>
+                  ) : (
+                    "Salvar Alterações"
+                  )}
                 </button>
               </div>
             </form>

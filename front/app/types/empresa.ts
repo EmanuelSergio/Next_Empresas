@@ -1,6 +1,6 @@
 type Empresa = {
   id: number;
-  razaoSocial: string;
+  razao_social: string;
   cnpj: string;
   cep: string;
   cidade: string;

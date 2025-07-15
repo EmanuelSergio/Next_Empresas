@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { EditEmpresaModal } from "./components/EditEmpresaModal";
-import { DeleteConfirmationModal } from "./components/DeleteLicencaModal";
+import { DeleteConfirmationModal } from "./components/DeleteEmpresaModal";
+import { AddEmpresaModal } from "./components/CreateEmpresaModal";
+import { empresaService } from "../services/empresaService";
 
 interface Empresa {
   id: number;
-  razaoSocial: string;
+  razao_social: string;
   cnpj: string;
   cep: string;
   cidade: string;
@@ -28,7 +30,7 @@ function EmpresaCard({
   return (
     <div className="card mb-3">
       <div className="card-body">
-        <h5 className="card-title">{empresa.razaoSocial}</h5>
+        <h5 className="card-title">{empresa.razao_social}</h5>
         <h6 className="card-subtitle mb-2 text-muted">CNPJ: {empresa.cnpj}</h6>
         <p className="card-text">
           {empresa.cidade} - {empresa.estado}
@@ -52,31 +54,30 @@ function EmpresaCard({
 }
 
 export default function EmpresasPage() {
-  const [empresas, setEmpresas] = useState<Empresa[]>([
-    {
-      id: 1,
-      razaoSocial: "Empresa Exemplo 1",
-      cnpj: "00.000.000/0001-00",
-      cidade: "São Paulo",
-      estado: "SP",
-      cep: "01000-000",
-      bairro: "Centro",
-      complemento: "",
-    },
-    {
-      id: 2,
-      razaoSocial: "Empresa Exemplo 2",
-      cnpj: "00.000.000/0001-01",
-      cidade: "Rio de Janeiro",
-      estado: "RJ",
-      cep: "",
-      bairro: "",
-      complemento: "",
-    },
-  ]);
+  const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchEmpresas = async () => {
+    try {
+      setLoading(true);
+      const response = await empresaService.getAll();
+      setEmpresas(response);
+    } catch (error) {
+      console.error(error);
+      setError("Falha ao carregar empresas");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEmpresas();
+  }, []);
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [currentEmpresa, setCurrentEmpresa] = useState<Empresa | null>(null);
 
   const handleEditClick = (empresa: Empresa) => {
@@ -89,19 +90,25 @@ export default function EmpresasPage() {
     setShowDeleteModal(true);
   };
 
-  const handleSaveEmpresa = (updatedData: Empresa) => {
-    setEmpresas((prev) =>
-      prev.map((emp) => (emp.id === updatedData.id ? updatedData : emp))
+  if (loading) {
+    return (
+      <main className="container mt-4">
+        <div className="d-flex justify-content-center">
+          <div className="spinner-border" role="status">
+            <span className="visually-hidden">Carregando...</span>
+          </div>
+        </div>
+      </main>
     );
-    setShowEditModal(false);
-  };
+  }
 
-  const handleDeleteEmpresa = () => {
-    if (currentEmpresa) {
-      setEmpresas((prev) => prev.filter((emp) => emp.id !== currentEmpresa.id));
-      setShowDeleteModal(false);
-    }
-  };
+  if (error) {
+    return (
+      <main className="container mt-4">
+        <div className="alert alert-danger">{error}</div>
+      </main>
+    );
+  }
 
   return (
     <main className="container mt-4">
@@ -111,22 +118,32 @@ export default function EmpresasPage() {
             isOpen={showEditModal}
             onClose={() => setShowEditModal(false)}
             empresa={currentEmpresa}
-            onSave={handleSaveEmpresa}
+            onSave={fetchEmpresas}
           />
 
           <DeleteConfirmationModal
             isOpen={showDeleteModal}
+            empresaId={currentEmpresa.id}
             onClose={() => setShowDeleteModal(false)}
-            onConfirm={handleDeleteEmpresa}
+            onConfirm={fetchEmpresas}
           />
         </>
       )}
 
+      <AddEmpresaModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSave={fetchEmpresas}
+      />
+
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="text-dark">Empresas</h1>
-        <Link href="/empresas/nova" className="btn btn-success">
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="btn btn-success"
+        >
           Nova Empresa
-        </Link>
+        </button>
       </div>
 
       <div className="row">

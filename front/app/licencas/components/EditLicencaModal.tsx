@@ -1,18 +1,7 @@
 "use client";
 
+import { Licenca } from "@/app/types/Licenca";
 import { useState } from "react";
-
-interface Licenca {
-  id: number;
-  numero: string;
-  orgaoAmbiental: string;
-  emissao: string;
-  validade: string;
-  empresa: {
-    id: number;
-    razaoSocial: string;
-  };
-}
 
 interface EmpresaOption {
   id: number;
@@ -85,8 +74,8 @@ export default function EditLicencaModal({
                   <input
                     type="text"
                     className="form-control"
-                    name="orgaoAmbiental"
-                    value={formData.orgaoAmbiental}
+                    name="orgao"
+                    value={formData.orgao}
                     onChange={handleChange}
                     required
                   />
@@ -96,7 +85,7 @@ export default function EditLicencaModal({
                   <select
                     className="form-select"
                     name="empresa"
-                    value={formData.empresa.id}
+                    value={formData.empresaId}
                     onChange={(e) => {
                       const empresaId = parseInt(e.target.value);
                       const empresa = empresas.find(

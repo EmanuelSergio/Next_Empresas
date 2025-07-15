@@ -1,14 +1,7 @@
 "use client";
 
+import { Licenca } from "@/app/types/Licenca";
 import React from "react";
-
-interface Licenca {
-  id: number;
-  numero: string;
-  orgaoAmbiental: string;
-  emissao: string;
-  validade: string;
-}
 
 interface SelectLicencaModalProps {
   isOpen: boolean;
@@ -18,7 +11,7 @@ interface SelectLicencaModalProps {
   onVincular: (licenca: Licenca) => void;
 }
 
-export function SelectLicencaModal({
+export function AddLicencaModal({
   isOpen,
   onClose,
   licencasDisponiveis,
@@ -63,7 +56,7 @@ export function SelectLicencaModal({
                   {licencasFiltradas.map((licenca) => (
                     <tr key={licenca.id}>
                       <td>{licenca.numero}</td>
-                      <td>{licenca.orgaoAmbiental}</td>
+                      <td>{licenca.orgao}</td>
                       <td>{licenca.emissao}</td>
                       <td>{licenca.validade}</td>
                       <td>
