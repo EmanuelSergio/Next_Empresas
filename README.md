@@ -18,6 +18,7 @@ Aplicativo construído com **Next.js 13+ App Router**, **TypeScript**, **MySQL**
 
 ```bash
 git clone https://github.com/EmanuelSergio/Next_Empresas.git
+cd Next_Empresas
 cd front
 ```
 
@@ -47,7 +48,7 @@ npm install
 
 ```bash
 npx drizzle-kit generate
-npx drizzle-kit migrate
+npx drizzle-kit migrate (se for alterado algo na tabela)
 ```
 
 ---
