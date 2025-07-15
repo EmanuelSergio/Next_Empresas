@@ -1,0 +1,1 @@
+ALTER TABLE `licenca` MODIFY COLUMN `empresa_id` int NOT NULL;
