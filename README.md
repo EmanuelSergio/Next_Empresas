@@ -12,7 +12,7 @@ Aplicativo construído com **Next.js 13+ App Router**, **TypeScript**, **MySQL**
 
 ---
 
-## ⚙️ Instalação
+## Instalação
 
 1. **Clone este repositório**
 
@@ -52,7 +52,7 @@ npx drizzle-kit migrate
 
 ---
 
-## 🚀 Executando o projeto
+## Executando o projeto
 
 ```bash
 npm run dev
@@ -62,7 +62,7 @@ Acesse [http://localhost:3000](http://localhost:3000) no navegador.
 
 ---
 
-## 🧭 Estrutura do projeto
+## Estrutura do projeto
 
 ```
 .
