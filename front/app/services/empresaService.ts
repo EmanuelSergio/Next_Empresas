@@ -1,6 +1,3 @@
-// services/empresaService.ts
-import { empresa } from "../api/db/schema";
-
 const API_URL = "/api/empresa";
 
 export const empresaService = {

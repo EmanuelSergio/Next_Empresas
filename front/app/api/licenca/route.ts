@@ -8,7 +8,6 @@ export async function POST(request: Request) {
   try {
     const data = await request.json();
 
-    // Validação básica
     if (!data.empresaId) {
       return NextResponse.json(
         { error: "ID da empresa é obrigatório" },

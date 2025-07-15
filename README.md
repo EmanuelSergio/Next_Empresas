@@ -1,5 +1,4 @@
-````md
-# 🏢 CRUD de Empresas e Licenças Ambientais
+🏢 CRUD de Empresas e Licenças Ambientais
 
 Aplicativo construído com **Next.js 13+ App Router**, **TypeScript**, **MySQL** e **Drizzle ORM**, que permite gerenciar empresas e suas licenças ambientais (CRUD completo).
 
@@ -18,10 +17,9 @@ Aplicativo construído com **Next.js 13+ App Router**, **TypeScript**, **MySQL**
 1. **Clone este repositório**
 
 ```bash
-git clone <URL_DO_REPO>
-cd NOME_DO_REPO
+git clone https://github.com/EmanuelSergio/Next_Empresas.git
+cd front
 ```
-````
 
 2. **Banco de dados**
 

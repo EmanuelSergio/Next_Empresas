@@ -11,7 +11,7 @@ export async function DELETE(
   try {
     const id = Number((await params).id);
 
-    // Validação do ID
+    // validação do id
     if (isNaN(id)) {
       return NextResponse.json(
         { error: "ID da licença inválido" },
@@ -19,7 +19,7 @@ export async function DELETE(
       );
     }
 
-    // Executa a exclusão
+    // exclusão
     const result = await db.delete(licenca).where(eq(licenca.id, id));
 
     return NextResponse.json({ success: true, deletedId: id }, { status: 200 });
@@ -44,7 +44,7 @@ export async function PUT(
 
     const body = await request.json();
 
-    // Atualiza a licença no banco de dados
+    // atualiza a licença no banco de dados
     await db
       .update(licenca)
       .set({

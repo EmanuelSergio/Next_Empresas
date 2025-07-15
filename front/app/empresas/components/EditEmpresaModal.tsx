@@ -69,7 +69,7 @@ export function EditEmpresaModal({
 
     try {
       await empresaService.update(empresa.id, formData);
-      await onSave(); // Atualiza a lista de empresas
+      await onSave();
       onClose(); // Fecha o modal
     } catch (err) {
       console.error("Erro ao atualizar empresa:", err);

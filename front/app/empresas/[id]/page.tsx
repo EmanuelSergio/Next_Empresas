@@ -26,7 +26,6 @@ export default function EmpresaDetalhesPage() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  // Estados dos modais separados
   const [showEditEmpresaModal, setShowEditEmpresaModal] = useState(false);
   const [showEditLicencaModal, setShowEditLicencaModal] = useState(false);
   const [showDeleteEmpresaModal, setShowDeleteEmpresaModal] = useState(false);
@@ -89,7 +88,6 @@ export default function EmpresaDetalhesPage() {
   };
 
   const handleEditLicencaClick = (licenca: Licenca) => {
-    // Formatar as datas para o formato YYYY-MM-DD que o input date espera
     const formattedLicenca = {
       ...licenca,
       emissao: licenca.emissao.split("T")[0], // Remove a parte do tempo se existir
@@ -162,6 +160,13 @@ export default function EmpresaDetalhesPage() {
         />
       )}
 
+      <EditEmpresaModal
+        isOpen={showEditEmpresaModal}
+        onClose={() => setShowEditEmpresaModal(false)}
+        empresa={empresa}
+        onSave={loadEmpresa}
+      />
+
       <DeleteLicencaModal
         isOpen={showDeleteLicencaModal}
         onClose={() => {
@@ -199,7 +204,6 @@ export default function EmpresaDetalhesPage() {
         </Link>
       </div>
 
-      {/* Dados da empresa */}
       <div className="row justify-content-center">
         <div className="col-md-8">
           <div className="card">
@@ -230,7 +234,6 @@ export default function EmpresaDetalhesPage() {
                 </div>
               </div>
 
-              {/* Botões de ação */}
               <div className="d-flex justify-content-end mb-3 gap-2">
                 <button
                   onClick={() => setShowEditEmpresaModal(true)}
@@ -252,7 +255,6 @@ export default function EmpresaDetalhesPage() {
                 </button>
               </div>
 
-              {/* Seção de licenças */}
               <h5 className="mt-4 mb-3">Licenças Ambientais</h5>
 
               {loading.licencas ? (

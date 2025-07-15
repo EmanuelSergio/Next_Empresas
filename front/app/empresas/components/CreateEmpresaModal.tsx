@@ -1,3 +1,4 @@
+import { empresaService } from "@/app/services/empresaService";
 import { useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 
@@ -27,22 +28,12 @@ export function AddEmpresaModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     try {
-      const response = await fetch("/api/empresa", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(empresa),
-      });
+      const data = await empresaService.create(empresa);
 
-      if (!response.ok) {
-        throw new Error("Erro ao criar empresa");
-      }
-
-      const data = await response.json();
-      onSave(data.empresa); // Atualiza a lista de empresas com a nova empresa
-      onClose(); // Fecha o modal
+      onSave(data); // Atualiza a lista
+      onClose();
     } catch (error) {
       console.error(error);
     }

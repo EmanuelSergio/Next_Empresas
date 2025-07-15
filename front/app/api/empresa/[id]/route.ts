@@ -8,7 +8,6 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Extrai o ID de forma síncrona (não precisa de await)
     const { id: idString } = await params;
     const empresaId = Number(idString);
 
@@ -79,10 +78,12 @@ export async function DELETE(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const empresaId = Number(params.id);
+    const { id: idString } = await params;
+
+    const empresaId = Number(idString);
     const data = await request.json();
 
     // Validação do ID

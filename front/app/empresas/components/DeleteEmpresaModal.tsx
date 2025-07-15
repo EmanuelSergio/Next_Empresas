@@ -1,6 +1,5 @@
 "use client";
 
-import { deleteEmpresa } from "@/app/api/lib/actions";
 import { empresaService } from "@/app/services/empresaService";
 import { useState } from "react";
 
