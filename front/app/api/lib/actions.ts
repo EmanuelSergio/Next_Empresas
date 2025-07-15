@@ -1,19 +1,21 @@
 "use server";
 import { db } from "@/app/api/db";
 import { empresa, licenca } from "@/app/api/db/schema";
+import { eq } from "drizzle-orm";
 
 export async function getEmpresas() {
+  console.log("Fetching empresas from the database");
   return db.select().from(empresa);
 }
 export async function createEmpresa(data: any) {
   return db.insert(empresa).values(data);
 }
-// export async function updateEmpresa(id: number, data: any) {
-//   return db.update(empresa).set(data).where({ id });
-// }
-// export async function deleteEmpresa(id: number) {
-//   return db.delete(empresa).where({ id });
-// }
+export async function updateEmpresa(id: number, data: any) {
+  return db.update(empresa).set(data).where(eq(empresa.id, id));
+}
+export async function deleteEmpresa(id: number) {
+  return db.delete(empresa).where(eq(empresa.id, id));
+}
 
 // export async function getLicencasByEmpresa(empId: number) {
 //   return db.select().from(licenca).where(licenca.empresaId.eq(empId));

@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { EditEmpresaModal } from "./components/EditEmpresaModal";
-import { DeleteConfirmationModal } from "./components/DeleteLicencaModal";
-import { Modal, Button, Form } from "react-bootstrap";
+import { DeleteConfirmationModal } from "./components/DeleteEmpresaModal";
 import { AddEmpresaModal } from "./components/CreateEmpresaModal";
+import { empresaService } from "../services/empresaService";
 
 interface Empresa {
   id: number;
@@ -55,20 +55,23 @@ function EmpresaCard({
 
 export default function EmpresasPage() {
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchEmpresas = async () => {
+    try {
+      setLoading(true);
+      const response = await empresaService.getAll();
+      setEmpresas(response);
+    } catch (error) {
+      console.error(error);
+      setError("Falha ao carregar empresas");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchEmpresas = async () => {
-      try {
-        const response = await fetch("/api/empresa");
-        if (!response.ok) {
-          throw new Error("Erro ao buscar empresas");
-        }
-        const data: Empresa[] = await response.json();
-        setEmpresas(data);
-      } catch (error) {
-        console.error(error);
-      }
-    };
     fetchEmpresas();
   }, []);
 
@@ -87,29 +90,25 @@ export default function EmpresasPage() {
     setShowDeleteModal(true);
   };
 
-  const handleSaveEmpresa = (updatedData: Empresa) => {
-    setEmpresas((prev) =>
-      prev.map((emp) => (emp.id === updatedData.id ? updatedData : emp))
+  if (loading) {
+    return (
+      <main className="container mt-4">
+        <div className="d-flex justify-content-center">
+          <div className="spinner-border" role="status">
+            <span className="visually-hidden">Carregando...</span>
+          </div>
+        </div>
+      </main>
     );
-    setShowEditModal(false);
-  };
+  }
 
-  const handleAddEmpresa = (newEmpresa: Omit<Empresa, "id">) => {
-    // Simula a criação de um ID (em produção, viria da API)
-    const newId =
-      empresas.length > 0 ? Math.max(...empresas.map((e) => e.id)) + 1 : 1;
-    const empresaComId = { ...newEmpresa, id: newId };
-
-    setEmpresas((prev) => [...prev, empresaComId]);
-    setShowAddModal(false);
-  };
-
-  const handleDeleteEmpresa = () => {
-    if (currentEmpresa) {
-      setEmpresas((prev) => prev.filter((emp) => emp.id !== currentEmpresa.id));
-      setShowDeleteModal(false);
-    }
-  };
+  if (error) {
+    return (
+      <main className="container mt-4">
+        <div className="alert alert-danger">{error}</div>
+      </main>
+    );
+  }
 
   return (
     <main className="container mt-4">
@@ -119,13 +118,14 @@ export default function EmpresasPage() {
             isOpen={showEditModal}
             onClose={() => setShowEditModal(false)}
             empresa={currentEmpresa}
-            onSave={handleSaveEmpresa}
+            onSave={fetchEmpresas}
           />
 
           <DeleteConfirmationModal
             isOpen={showDeleteModal}
+            empresaId={currentEmpresa.id}
             onClose={() => setShowDeleteModal(false)}
-            onConfirm={handleDeleteEmpresa}
+            onConfirm={fetchEmpresas}
           />
         </>
       )}
@@ -133,7 +133,7 @@ export default function EmpresasPage() {
       <AddEmpresaModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
-        onSave={handleAddEmpresa}
+        onSave={fetchEmpresas}
       />
 
       <div className="d-flex justify-content-between align-items-center mb-4">

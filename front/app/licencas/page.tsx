@@ -1,22 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import EditLicencaModal from "./components/EditLicencaModal";
 import DeleteLicencaModal from "./components/DeleteLicencaModal";
-import NewLicencaModal from "./components/NewLicencaModal";
-
-interface Licenca {
-  id: number;
-  numero: string;
-  orgaoAmbiental: string;
-  emissao: string;
-  validade: string;
-  empresa: {
-    id: number;
-    razaoSocial: string;
-  };
-}
+import { AddLicencaModal } from "./components/NewLicencaModal";
+import { licencaService } from "../services/licencaService";
+import { empresaService } from "../services/empresaService";
+import type { Licenca } from "../types/Licenca";
 
 interface EmpresaOption {
   id: number;
@@ -24,44 +15,93 @@ interface EmpresaOption {
 }
 
 export default function LicencasPage() {
-  const [licencas, setLicencas] = useState<Licenca[]>([
-    {
-      id: 1,
-      numero: "LIC-2023-001",
-      orgaoAmbiental: "CETESB",
-      emissao: "2023-01-10",
-      validade: "2026-01-10",
-      empresa: {
-        id: 1,
-        razaoSocial: "Empresa Exemplo Ltda",
-      },
-    },
-    {
-      id: 2,
-      numero: "LIC-2023-002",
-      orgaoAmbiental: "IBAMA",
-      emissao: "2023-03-15",
-      validade: "2025-03-15",
-      empresa: {
-        id: 2,
-        razaoSocial: "Outra Empresa SA",
-      },
-    },
-  ]);
-
-  const empresasOptions: EmpresaOption[] = [
-    { id: 1, razaoSocial: "Empresa Exemplo Ltda" },
-    { id: 2, razaoSocial: "Outra Empresa SA" },
-    { id: 3, razaoSocial: "Terceira Empresa ME" },
-  ];
+  const [licencas, setLicencas] = useState<Licenca[]>([]);
+  const [empresasOptions, setEmpresasOptions] = useState<EmpresaOption[]>([]);
+  const [loading, setLoading] = useState({
+    licencas: true,
+    empresas: true,
+  });
+  const [error, setError] = useState("");
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showNewModal, setShowNewModal] = useState(false);
   const [currentLicenca, setCurrentLicenca] = useState<Licenca | null>(null);
 
+  const loadData = async () => {
+    try {
+      // Carrega licenças
+      const licencasData = await licencaService.getAll();
+      setLicencas(licencasData);
+
+      // Carrega empresas para as opções
+      const empresasData = await empresaService.getAll();
+      setEmpresasOptions(
+        empresasData.map((e: Empresa) => ({
+          id: e.id,
+          razaoSocial: e.razao_social,
+        }))
+      );
+    } catch (err) {
+      setError("Falha ao carregar dados");
+      console.error(err);
+    } finally {
+      setLoading({ licencas: false, empresas: false });
+    }
+  };
+
+  const handleCreateLicenca = async (novaLicenca: Omit<Licenca, "id">) => {
+    try {
+      await licencaService.create(novaLicenca);
+      await loadData(); // Atualiza a lista após adicionar
+      setShowNewModal(false); // Fecha o modal
+    } catch (err) {
+      setError("Erro ao criar nova licença");
+      console.error(err);
+    }
+  };
+
+  // Carrega dados iniciais
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const handleEditClick = (licenca: Licenca) => {
-    setCurrentLicenca(licenca);
+    // Formata as datas para o formato que o input date espera (YYYY-MM-DD)
+    const formatDate = (dateString: string) => {
+      if (!dateString) return "";
+
+      // Se já está no formato YYYY-MM-DD, retorna sem mudanças
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        return dateString;
+      }
+
+      // Se for uma data ISO (com 'T'), extrai a parte da data
+      if (dateString.includes("T")) {
+        return dateString.split("T")[0];
+      }
+
+      // Se for um objeto Date ou string de data local, converte
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return ""; // Retorna vazio se a data for inválida
+      }
+
+      // Formata para YYYY-MM-DD
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+
+      return `${year}-${month}-${day}`;
+    };
+
+    const formattedLicenca = {
+      ...licenca,
+      emissao: formatDate(licenca.emissao),
+      validade: formatDate(licenca.validade),
+    };
+
+    setCurrentLicenca(formattedLicenca);
     setShowEditModal(true);
   };
 
@@ -70,55 +110,82 @@ export default function LicencasPage() {
     setShowDeleteModal(true);
   };
 
-  const handleSaveLicenca = (updatedData: Licenca) => {
-    setLicencas((prev) =>
-      prev.map((lic) => (lic.id === updatedData.id ? updatedData : lic))
-    );
-    console.log("Licença atualizada:", updatedData);
-  };
+  const handleSaveLicenca = async (updatedData: Licenca) => {
+    try {
+      // Converte as datas de volta para o formato ISO antes de enviar
+      const dataToSave = {
+        ...updatedData,
+        emissao: new Date(updatedData.emissao).toISOString(),
+        validade: new Date(updatedData.validade).toISOString(),
+      };
 
-  const handleCreateLicenca = (newLicencaData: {
-    numero: string;
-    orgaoAmbiental: string;
-    emissao: string;
-    validade: string;
-    empresaId: number;
-  }) => {
-    const newLicenca: Licenca = {
-      id: Math.max(...licencas.map((l) => l.id)) + 1,
-      numero: newLicencaData.numero,
-      orgaoAmbiental: newLicencaData.orgaoAmbiental,
-      emissao: newLicencaData.emissao,
-      validade: newLicencaData.validade,
-      empresa: {
-        id: newLicencaData.empresaId,
-        razaoSocial:
-          empresasOptions.find((e) => e.id === newLicencaData.empresaId)
-            ?.razaoSocial || "",
-      },
-    };
+      await licencaService.update(updatedData.id, {
+        numero: dataToSave.numero,
+        orgao: dataToSave.orgao,
+        emissao: dataToSave.emissao,
+        validade: dataToSave.validade,
+        empresaId: dataToSave.empresaId,
+      });
 
-    setLicencas((prev) => [...prev, newLicenca]);
-    setShowNewModal(false);
-    console.log("Nova licença criada:", newLicenca);
-  };
-
-  const handleDeleteLicenca = () => {
-    if (currentLicenca) {
-      setLicencas((prev) => prev.filter((lic) => lic.id !== currentLicenca.id));
-      console.log("Licença excluída:", currentLicenca.id);
-      setShowDeleteModal(false);
+      // Atualiza a lista com os dados formatados corretamente
+      setLicencas((prev) =>
+        prev.map((lic) =>
+          lic.id === updatedData.id
+            ? {
+                ...updatedData,
+                emissao: dataToSave.emissao,
+                validade: dataToSave.validade,
+              }
+            : lic
+        )
+      );
+      setShowEditModal(false);
+    } catch (err) {
+      setError("Falha ao atualizar licença");
+      console.error(err);
     }
   };
+
+  const handleDeleteLicenca = async () => {
+    if (!currentLicenca) return;
+
+    try {
+      await licencaService.delete(currentLicenca.id);
+      setLicencas((prev) => prev.filter((lic) => lic.id !== currentLicenca.id));
+      setShowDeleteModal(false);
+    } catch (err) {
+      setError("Falha ao excluir licença");
+    }
+  };
+
+  if (loading.licencas || loading.empresas) {
+    return (
+      <main className="container mt-4">
+        <div className="d-flex justify-content-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Carregando...</span>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="container mt-4">
+        <div className="alert alert-danger">{error}</div>
+      </main>
+    );
+  }
 
   return (
     <main className="container mt-4">
       {/* Modal de Nova Licença */}
-      <NewLicencaModal
+      <AddLicencaModal
         isOpen={showNewModal}
         onClose={() => setShowNewModal(false)}
         empresas={empresasOptions}
-        onSave={handleCreateLicenca}
+        onCreate={handleCreateLicenca}
       />
 
       {/* Modais de Edição e Exclusão */}
@@ -172,10 +239,12 @@ export default function LicencasPage() {
                   {licencas.map((licenca) => (
                     <tr key={licenca.id}>
                       <td>{licenca.numero}</td>
-                      <td>{licenca.orgaoAmbiental}</td>
+                      <td>{licenca.orgao}</td>
                       <td>
-                        <Link href={`/empresas/${licenca.empresa.id}`}>
-                          {licenca.empresa.razaoSocial}
+                        <Link href={`/empresas/${licenca.empresaId}`}>
+                          {empresasOptions.find(
+                            (e) => e.id === licenca.empresaId
+                          )?.razaoSocial || "Empresa não encontrada"}
                         </Link>
                       </td>
                       <td>{new Date(licenca.emissao).toLocaleDateString()}</td>
